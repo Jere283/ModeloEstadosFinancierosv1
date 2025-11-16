@@ -235,7 +235,7 @@ def analisis_sensibilidad_variables(base_params):
     carne_base = np.mean(base_params['carne'])
 
     # Calcular valor base para referencias
-    res_base = calcular_estado(precio_base, almuerzos_base, dias_base, carne_base, 
+    res_base = calcular_estado(precio_base, almuerzos_base, dias_base, carne_base,
                                75, 0.005, usar_random=False)
     utilidad_base = res_base['utilidad_bruta']
     ventas_base = res_base['ventas']
@@ -244,8 +244,8 @@ def analisis_sensibilidad_variables(base_params):
         if var == 'precio':
             valores = np.linspace(base_params['precio'][0], base_params['precio'][1], n_puntos)
             for val in valores:
-                res = calcular_estado(val, almuerzos_base, dias_base, carne_base, 
-                                    75, 0.005, usar_random=False)
+                res = calcular_estado(val, almuerzos_base, dias_base, carne_base,
+                                      75, 0.005, usar_random=False)
                 resultados.append({
                     'variable': 'Precio Almuerzo',
                     'valor': val,
@@ -257,8 +257,8 @@ def analisis_sensibilidad_variables(base_params):
         elif var == 'almuerzos':
             valores = np.linspace(base_params['ventas'][0], base_params['ventas'][1], n_puntos)
             for val in valores:
-                res = calcular_estado(precio_base, val, dias_base, carne_base, 
-                                    75, 0.005, usar_random=False)
+                res = calcular_estado(precio_base, val, dias_base, carne_base,
+                                      75, 0.005, usar_random=False)
                 resultados.append({
                     'variable': 'Almuerzos Diarios',
                     'valor': val,
@@ -270,8 +270,8 @@ def analisis_sensibilidad_variables(base_params):
         elif var == 'dias':
             valores = np.linspace(base_params['dias'][0], base_params['dias'][1], n_puntos)
             for val in valores:
-                res = calcular_estado(precio_base, almuerzos_base, val, carne_base, 
-                                    75, 0.005, usar_random=False)
+                res = calcular_estado(precio_base, almuerzos_base, val, carne_base,
+                                      75, 0.005, usar_random=False)
                 resultados.append({
                     'variable': 'Días Trabajados',
                     'valor': val,
@@ -283,8 +283,8 @@ def analisis_sensibilidad_variables(base_params):
         elif var == 'carne':
             valores = np.linspace(base_params['carne'][0], base_params['carne'][1], n_puntos)
             for val in valores:
-                res = calcular_estado(precio_base, almuerzos_base, dias_base, val, 
-                                    75, 0.005, usar_random=False)
+                res = calcular_estado(precio_base, almuerzos_base, dias_base, val,
+                                      75, 0.005, usar_random=False)
                 resultados.append({
                     'variable': 'Precio Carne',
                     'valor': val,
@@ -658,7 +658,7 @@ with tabs[2]:
     st.header("2.1 - Análisis de Sensibilidad: Variables Principales")
     st.markdown("""
         **Objetivo**: Analizar el impacto INDIVIDUAL de cada variable en ventas y utilidad.
-        
+
         **Método**: Análisis univariado (ceteris paribus) - cada variable se varía mientras las demás permanecen constantes.
         """)
 
@@ -686,9 +686,10 @@ with tabs[2]:
             ax1.legend()
             ax1.grid(True, alpha=0.3)
             ax1.axhline(0, color='red', linestyle='--', alpha=0.5, label='Break-even')
-            
+
             # Formatear eje Y
-            ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1e6:.1f}M' if abs(x) >= 1e6 else f'${x/1e3:.0f}K'))
+            ax1.yaxis.set_major_formatter(
+                plt.FuncFormatter(lambda x, p: f'${x / 1e6:.1f}M' if abs(x) >= 1e6 else f'${x / 1e3:.0f}K'))
 
             # Gráfico 2: Cambio porcentual en utilidad
             for var in df_vars['variable'].unique():
@@ -713,14 +714,15 @@ with tabs[2]:
             ax3.set_title('Impacto en Ventas\n(Precio Carne no afecta ventas)', fontsize=12, fontweight='bold')
             ax3.legend()
             ax3.grid(True, alpha=0.3)
-            ax3.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1e6:.1f}M' if abs(x) >= 1e6 else f'${x/1e3:.0f}K'))
+            ax3.yaxis.set_major_formatter(
+                plt.FuncFormatter(lambda x, p: f'${x / 1e6:.1f}M' if abs(x) >= 1e6 else f'${x / 1e3:.0f}K'))
 
             plt.tight_layout()
             st.pyplot(fig)
 
             # Tabla de análisis de sensibilidad
             st.subheader("📊 Tabla de Sensibilidad Comparativa")
-            
+
             # Calcular sensibilidad (elasticidad) para cada variable
             sensibilidad_data = []
             for var in df_vars['variable'].unique():
@@ -729,32 +731,37 @@ with tabs[2]:
                     # Tomar extremos
                     minimo = data.iloc[0]
                     maximo = data.iloc[-1]
-                    
+
                     cambio_var_pct = maximo['var_pct'] - minimo['var_pct']
                     cambio_util_pct = maximo['utilidad_cambio_pct'] - minimo['utilidad_cambio_pct']
-                    
+
                     # Elasticidad = (% cambio utilidad) / (% cambio variable)
                     elasticidad = cambio_util_pct / cambio_var_pct if cambio_var_pct != 0 else 0
-                    
+
                     sensibilidad_data.append({
                         'Variable': var,
                         'Rango': f"{minimo['valor']:.0f} - {maximo['valor']:.0f}",
                         'Variación (%)': f"{cambio_var_pct:+.1f}%",
                         'Impacto en Utilidad': f"{cambio_util_pct:+.1f}%",
+                        'Elasticidad_num': elasticidad,  # Guardar como número para ordenar
                         'Elasticidad': f"{elasticidad:.2f}",
-                        'Interpretación': 'Alta' if abs(elasticidad) > 2 else 'Media' if abs(elasticidad) > 1 else 'Baja'
+                        'Interpretación': 'Alta' if abs(elasticidad) > 2 else 'Media' if abs(
+                            elasticidad) > 1 else 'Baja'
                     })
-            
+
             df_sensibilidad = pd.DataFrame(sensibilidad_data)
-            df_sensibilidad = df_sensibilidad.sort_values('Elasticidad', key=lambda x: x.abs(), ascending=False)
+            # Ordenar por valor absoluto de elasticidad numérica
+            df_sensibilidad = df_sensibilidad.sort_values('Elasticidad_num', key=lambda x: abs(x), ascending=False)
+            # Eliminar columna auxiliar
+            df_sensibilidad = df_sensibilidad.drop(columns=['Elasticidad_num'])
             st.dataframe(df_sensibilidad, use_container_width=True, hide_index=True)
-            
+
             st.info("""
                 **Interpretación de Elasticidad:**
                 - **> 2.0**: Muy sensible - Pequeños cambios causan grandes impactos
                 - **1.0 - 2.0**: Sensibilidad media - Cambio proporcional
                 - **< 1.0**: Poco sensible - Cambios grandes tienen impacto moderado
-                
+
                 **Elasticidad positiva** = Variable y utilidad se mueven en la misma dirección  
                 **Elasticidad negativa** = Variable y utilidad se mueven en direcciones opuestas
                 """)
